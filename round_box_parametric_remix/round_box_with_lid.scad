@@ -9,8 +9,8 @@ bottomThickness=2;
 lidThickness=2;
 lidClearance=0.2;
 lidEdgeThickness=0.5;
-horizontalDividers = 1; //[1:10]
-verticalDividers = 1; //[1:10]
+columns = 2; //[1:10]
+rows = 2; //[1:10]
 // Notch in the lid
 withNotch=true;//true;//[true:false]
 
@@ -37,17 +37,25 @@ module showBox(){
 			  wt=wallThickness,
 			  lt=lidThickness,
 			  r=cornerRadius,
-              hd=horizontalDividers,
-              vd=verticalDividers);
+              rs=rows,
+              cs=columns);
 }
 
-module round_box(l=40,w=30,h=30,bt=2,wt=2,lt=2,r=5,hd=1,vd=1){
+module round_box(l=40,w=30,h=30,bt=2,wt=2,lt=2,r=5,rs=1,cs=1){
 	difference() { 
 		round_cube(l=l,w=w,h=h-lt,r=r);
 		translate ([wt, wt, bt]) 
 		round_cube(l=l-wt*2,w=w-wt*2,h=h,r=r-wt);
 	}
     
+    for (i = [2:1:rows]) {
+        translate([(l/rs)*(i-1)-(wt/2),wt,wt])
+        cube([wt, w - wt*2, h-wt*2]);
+    }
+    for (i = [2:1:columns]) {
+        translate([wt, (w/cs)*(i-1)-(wt/2), wt])
+        cube([l - wt*2, wt, h-wt*2]);
+    }
     
 	//use two box rims. one to make a slope to support the lid
 	roundBoxRim();
