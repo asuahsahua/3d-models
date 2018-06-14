@@ -1,7 +1,7 @@
 
-itemsShown="both"; // [both,box,lid]
+itemsShown="box"; // [both,box,lid]
 boxLength=100;
-boxWidth=50;
+boxWidth=100;
 boxHeight=30;
 cornerRadius=5;
 wallThickness=2;
@@ -13,11 +13,13 @@ columns = 2; //[1:10]
 rows = 2; //[1:10]
 // Notch in the lid
 withNotch=true;//true;//[true:false]
+bevelRadius = 5;
 
 /* [Global] */
 if (itemsShown=="box") showBox();
 if (itemsShown=="lid") showLid();
 if (itemsShown=="both"){showBox();showLid();}
+
 
 module showLid(){
 	translate ([0, -2*wallThickness, 0]) 
@@ -48,19 +50,35 @@ module round_box(l=40,w=30,h=30,bt=2,wt=2,lt=2,r=5,rs=1,cs=1){
 		round_cube(l=l-wt*2,w=w-wt*2,h=h,r=r-wt);
 	}
     
-    for (i = [2:1:rows]) {
+    // add cells
+    for (i = [2:1:rs]) {
         translate([(l/rs)*(i-1)-(wt/2),wt,wt])
         cube([wt, w - wt*2, h-wt*2]);
     }
-    for (i = [2:1:columns]) {
+    for (i = [2:1:cs]) {
         translate([wt, (w/cs)*(i-1)-(wt/2), wt])
         cube([l - wt*2, wt, h-wt*2]);
+    }
+    
+    // add inner bevels
+    for (row = [0:rs-1], column = [0:cs-1]) {
+		echo("Row", row, "Column", column);
+		ht = wt / 2;
+		roundBoxBevel(
+			x1=wt + row * ((w-2*wt) / rs) + ht,
+			y1=wt + column * ((l-2*wt) / cs) + ht,
+			x2=wt + (row+1) * ((w-2*wt) / rs) - ht,
+			y2=wt + (column+1) * ((l-2*wt) / cs) - ht,
+			radius=bevelRadius,
+			wt=wt
+		);
     }
     
 	//use two box rims. one to make a slope to support the lid
 	roundBoxRim();
 	translate ([0, 0, -wt]) roundBoxRim();
 }
+
 
 module roundBoxRim(l=boxLength,
 				   w=boxWidth,
@@ -124,3 +142,22 @@ module round_cube(l=40,w=30,h=20,r=5,$fn=30){
 		translate ([l-r, r, 0]) cylinder (h = h, r=r);
 	}
 }
+
+module roundBoxBevel(x1,y1,x2,y2,radius,wt) {
+//%    color("red", .25) translate([x1, y1, 0]) cube([x2-x1, y2-y1, 50]);
+    if (radius > 0) {
+        translate([x1, y1, wt]) rotate([0, 0, 90]) rotate([90, 0, 0]) bevel(x2-x1, radius);
+        translate([x1, y2, wt]) rotate([90, 0, 0]) rotate([0, 0, 0]) bevel(x2-x1, radius);
+        translate([x2, y2, wt]) rotate([0, 0, 270]) rotate([90, 0, 0]) bevel(x2-x1, radius);
+        translate([x2, y2, wt]) rotate([0, 0, 90]) rotate([0, 270, 0]) bevel(x2-x1, radius);
+    }
+}
+
+module bevel(length,radius) {
+    difference() {
+        cube([radius, radius, length]);
+        translate([radius, radius, -1])
+        cylinder(length + 2, radius, radius, false);
+    }
+}
+    
